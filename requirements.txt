@@ -3,11 +3,6 @@ torch
 torchaudio
 deepfilterdataloader
 deepfilterlib
-icecream>=2
-loguru>=0.5
-numpy>=1.20
-ptflops
-requests
-packaging
-sympy
+librosa
+matplotlib
 streamlit

@@ -2,7 +2,6 @@ import os
 import glob
 import torchaudio
 import torchaudio.transforms as T
-from pydub import AudioSegment
 import numpy as np
 from matplotlib import pyplot as plt
 import librosa
