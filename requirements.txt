@@ -1,8 +1,7 @@
 numpy
 torch
 torchaudio
-deepfilterdataloader
-deepfilterlib
+deepfilternet
 librosa
 matplotlib
 streamlit

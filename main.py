@@ -19,10 +19,14 @@ def display_audio_info(audio, title):
     # 두 개의 컬럼 생성
     col1, col2 = st.columns(2)
 
+    audio = np.clip(audio, -1.0, 1.0)
+    if len(np.shape(audio)) == 2:
+        audio = audio[0]
+
     # 왼쪽 컬럼에 스펙트로그램 표시
     with col1:
         st.markdown(f"### {title} - Spectrogram")
-        D = librosa.stft(audio[0])  # STFT of y
+        D = librosa.stft(audio)  # STFT of y
         S_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
         fig, ax = plt.subplots()
         img = librosa.display.specshow(
@@ -34,7 +38,7 @@ def display_audio_info(audio, title):
     with col2:
         st.markdown(f"### {title} - Waveform")
         fig, ax = plt.subplots()
-        plt.plot(audio[0])
+        plt.plot(audio)
         ax.set_xticks([])
         ax.set_ylim(-1, 1)
         st.pyplot(fig)
@@ -51,7 +55,7 @@ def main():
     st.header('손쉽게 불필요한 소음을 제거하세요!')
 
     uploaded_file = st.file_uploader(
-        "변환할 파일을 업로드 해주세요. (지원 형식: .wav, .flac)")
+        "변환할 파일을 업로드 해주세요. (지원 형식: .wav, .mp3, .opus)")
 
     if uploaded_file:
         # 이전에 다운로드 한 파일을 삭제
@@ -60,19 +64,20 @@ def main():
             os.remove(file)
 
         uploaded_file_type = uploaded_file.type.split('/')[-1]
-        if uploaded_file_type not in ['wav', 'flac']:
+        print(uploaded_file_type)
+        if uploaded_file_type not in ['wav', 'mpeg', 'ogg']:
             st.text('지원하지 않는 파일 형식입니다.')
         else:
-            noisy_audio, sr = torchaudio.load(uploaded_file, normalize=False)
-            print(noisy_audio)
-            print(sr)
-            st.audio(noisy_audio.numpy(), sample_rate=sr)
+            with st.spinner('소음 제거하는 중'):
+                noisy_audio, sr = torchaudio.load(uploaded_file)
+                print("np.shape(noisy_audio)", np.shape(noisy_audio))
+                st.audio(noisy_audio.numpy(), sample_rate=sr)
 
-            # 샘플링 레이트가 48000Hz가 아닐 경우 리샘플링
-            if sr != df_sr:
-                resampler = T.Resample(orig_freq=sr, new_freq=df_sr)
-                noisy_audio = resampler(noisy_audio)
-            display_audio_info(noisy_audio.numpy(), "입력")
+                # 샘플링 레이트가 48000Hz가 아닐 경우 리샘플링
+                if sr != df_sr:
+                    resampler = T.Resample(orig_freq=sr, new_freq=df_sr)
+                    noisy_audio = resampler(noisy_audio)
+                display_audio_info(noisy_audio.numpy(), "입력")
 
             with st.spinner('소음 제거하는 중'):
                 output_audio = enhance(model, df_state, noisy_audio)
@@ -84,22 +89,6 @@ def main():
                     enhanced_audio = resampler(enhanced_audio)
                 st.audio(enhanced_audio.numpy(), sample_rate=sr)
                 display_audio_info(output_audio.numpy(), "출력")
-
-                # 오디오 데이터를 임시 파일에 저장
-                output_path = "enhanced_audio.{}".format(
-                    uploaded_file_type.split('/')[-1])
-                print("output_path", output_path)
-                torchaudio.save(output_path, enhanced_audio, sr)
-
-                # 저장된 오디오 파일을 읽어서 다운로드 버튼에 연결
-                with open(output_path, 'rb') as f:
-                    audio_bytes = f.read()
-                    st.download_button(
-                        label='다운로드',
-                        data=audio_bytes,
-                        file_name=output_path,
-                        mime='audio/{}'.format(uploaded_file_type)
-                    )
 
     html(button, height=70, width=240)
 
