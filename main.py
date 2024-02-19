@@ -8,7 +8,15 @@ import librosa
 import librosa.display
 from df import enhance, init_df
 import streamlit as st
-from streamlit.components.v1 import html
+# from streamlit.components.v1 import html
+
+# @inproceedings{schroeter2023deepfilternet3,
+#   title = {{DeepFilterNet}: Perceptually Motivated Real-Time Speech Enhancement},
+#   author = {Schröter, Hendrik and Rosenkranz, Tobias and Escalante-B., Alberto N. and Maier, Andreas},
+#   booktitle={INTERSPEECH},
+#   year = {2023},
+# }
+# -----------------------------------------------------------------------------------------
 
 app_title = "소음 억제 도구"
 model, df_state, _ = init_df()  # Load default model
@@ -47,8 +55,6 @@ def display_audio_info(audio, title):
 def main():
     st.set_page_config(page_title=app_title, page_icon="favicon.ico",
                        layout="centered", initial_sidebar_state="auto", menu_items=None)
-
-    button = """<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="woojae" data-color="#FFDD00" data-emoji="☕"  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>"""
 
     st.title(app_title)
     st.divider()
@@ -89,21 +95,6 @@ def main():
                     enhanced_audio = resampler(enhanced_audio)
                 st.audio(enhanced_audio.numpy(), sample_rate=sr)
                 display_audio_info(output_audio.numpy(), "출력")
-
-    html(button, height=70, width=240)
-
-    st.markdown(
-        """
-        <style>
-            iframe[width="240"] {
-                position: fixed;
-                bottom: 30px;
-                right: 10px;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == '__main__':
